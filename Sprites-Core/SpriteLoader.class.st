@@ -5,26 +5,34 @@ Class {
 		'imageContainer',
 		'height',
 		'spriteWidth',
-		'spriteHeight'
+		'spriteHeight',
+		'spiteSheet',
+		'spriteSheet',
+		'spriteProperties'
 	],
 	#category : #'Sprites-Core-Sprites-Core'
 }
 
 { #category : #accessing }
 SpriteLoader >> addImage: image toContainer: container [
-	| b |
-	b := BlBounds new
-		top: 0;
-		left: 0;
-		bottom: image height;
-		right: image width.
+	| scrollPane |
+	scrollPane := BlPannableElement new.
 	self
 		imageContainer:
 			(BlElement new
-				geometryBounds: b;
 				background: image;
-				margin: (BlInsets all: 10)).
-	container addChild: self imageContainer
+				size: image width @ image height;
+				margin: (BlInsets all: 10)).	"BlScrollableElement new
+		background: Color white;
+		constraintsDo: [ :c | 
+			c horizontal matchParent.
+			c vertical matchParent ]."
+	"scrollPane addChild: self imageContainer."
+	scrollPane
+		contentElement: self imageContainer;
+			in: [ :aPannable | aPannable zoomableElement clipChildren: false ];
+		zoomToActualSize.
+	container addChild: scrollPane
 ]
 
 { #category : #accessing }
@@ -42,15 +50,7 @@ SpriteLoader >> imageContainer: anObject [
 SpriteLoader >> initialize [
 	spriteHeight := 128.
 	spriteWidth := 128.
-]
-
-{ #category : #accessing }
-SpriteLoader >> loadPNG [
-	| file |
-	file := UIManager default
-		chooseFullFileNameMatching: #('png')
-		label: 'Import Spritesheet.'.
-	^ file
+	spriteProperties := SpriteProperties new model: self
 ]
 
 { #category : #accessing }
@@ -67,8 +67,8 @@ SpriteLoader >> loadPNG: aView [
 				addLook: BrShadowLook;
 				margin: (BlInsets all: 20);
 				constraintsDo: [ :c | 
-					c horizontal fitContent.
-					c vertical fitContent ].
+					c horizontal matchParent.
+					c vertical matchParent ].
 			browser := BrFileSelector new.
 			browser
 				hMatchParent;
@@ -76,12 +76,11 @@ SpriteLoader >> loadPNG: aView [
 				buttonLabel: 'Import';
 				okAction: [ :filepath | 
 					| image |
-					Transcript
-						show: 'Loading image ' , filepath asString;
-						cr.
 					image := PNGReadWriter formFromFileNamed: filepath.
+					spriteSheet := image.
 					self addImage: image toContainer: container ].
 			container addChild: browser.
+			container addChild: spriteProperties.
 			container ]
 ]
 
@@ -111,24 +110,53 @@ SpriteLoader >> spriteActionsCard [
 ]
 
 { #category : #accessing }
+SpriteLoader >> spriteHeight [
+	^spriteHeight
+]
+
+{ #category : #accessing }
+SpriteLoader >> spriteHeight: h [
+	spriteHeight := h
+]
+
+{ #category : #accessing }
+SpriteLoader >> spriteWidth [
+	^spriteWidth
+]
+
+{ #category : #accessing }
+SpriteLoader >> spriteWidth: w [
+	spriteWidth := w
+]
+
+{ #category : #accessing }
 SpriteLoader >> tesselateSpriteSheet [
-	| heightSteps |
-	
-	heightSteps := (imageContainer height / spriteHeight) asInteger.
+	| heightSteps widthSteps pos |
+	heightSteps := (spriteSheet height / spriteHeight) asInteger.
+	widthSteps := (spriteSheet width / spriteWidth) asInteger.
 	Transcript
-		show: 'tesselateSpriteSheet.. heightSteps = ',heightSteps asString,' imgctr bounds = ',imageContainer bounds asString;
+		show:
+			'tesselateSpriteSheet.. heightSteps = ' , heightSteps asString
+				, ' widthSteps = ' , widthSteps asString;
 		cr.
 	0 to: heightSteps do: [ :y | 
-		| yline pos |
+		| yline |
 		yline := self tesselationLine.
-		pos := imageContainer size x @ imageContainer size y  .
 		yline
-			fromAnchor:
-				(BlAbsolutePositionAnchor new position: (y * spriteHeight) @ pos x);
+			fromAnchor: (BlAbsolutePositionAnchor new position: 0 @ (y * spriteHeight));
 			toAnchor:
 				(BlAbsolutePositionAnchor new
-					position: (y * spriteHeight) @ (pos x + imageContainer width)).
-		imageContainer addChild: yline ]
+					position: spriteSheet width @ (y * spriteHeight)).
+		imageContainer addChild: yline ].
+	0 to: widthSteps do: [ :x | 
+		| xline |
+		xline := self tesselationLine.
+		xline
+			fromAnchor: (BlAbsolutePositionAnchor new position: (x * spriteWidth) @ 0);
+			toAnchor:
+				(BlAbsolutePositionAnchor new
+					position: (x * spriteWidth) @ spriteSheet height).
+		imageContainer addChild: xline ]
 ]
 
 { #category : #accessing }
