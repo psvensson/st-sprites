@@ -8,7 +8,8 @@ Class {
 		'spriteHeight',
 		'spiteSheet',
 		'spriteSheet',
-		'spriteProperties'
+		'spriteProperties',
+		'container'
 	],
 	#category : #'Sprites-Core-Sprites-Core'
 }
@@ -60,8 +61,7 @@ SpriteLoader >> loadPNG: aView [
 	^ aView explicit
 		title: 'Details' translated;
 		priority: 5;
-		stencil: [ | container |
-			container := BlElement new
+		stencil: [ container := BlElement new
 				layout: BlLinearLayout vertical;
 				background: Color white;
 				addLook: BrShadowLook;
@@ -69,19 +69,28 @@ SpriteLoader >> loadPNG: aView [
 				constraintsDo: [ :c | 
 					c horizontal matchParent.
 					c vertical matchParent ].
-			browser := BrFileSelector new.
-			browser
-				hMatchParent;
-				vMatchParent;
-				buttonLabel: 'Import';
-				okAction: [ :filepath | 
-					| image |
-					image := PNGReadWriter formFromFileNamed: filepath.
-					spriteSheet := image.
-					self addImage: image toContainer: container ].
-			container addChild: browser.
-			container addChild: spriteProperties.
+			self recreateView.
 			container ]
+]
+
+{ #category : #accessing }
+SpriteLoader >> recreateView [
+	| browser |
+	container removeChildren.
+	browser := BrFileSelector new.
+	browser
+		hMatchParent;
+		vMatchParent;
+		buttonLabel: 'Import';
+		okAction: [ :filepath | 
+			| image |
+			image := PNGReadWriter formFromFileNamed: filepath.
+			spriteSheet := image.
+			self recreateView ].
+	spriteSheet
+		ifNotNil: [ self addImage: spriteSheet toContainer: container ].
+	container addChild: browser.
+	container addChild: spriteProperties
 ]
 
 { #category : #accessing }
@@ -116,7 +125,7 @@ SpriteLoader >> spriteHeight [
 
 { #category : #accessing }
 SpriteLoader >> spriteHeight: h [
-	spriteHeight := h
+	spriteHeight := h.
 ]
 
 { #category : #accessing }
@@ -126,7 +135,7 @@ SpriteLoader >> spriteWidth [
 
 { #category : #accessing }
 SpriteLoader >> spriteWidth: w [
-	spriteWidth := w
+	spriteWidth := w.
 ]
 
 { #category : #accessing }
@@ -134,11 +143,6 @@ SpriteLoader >> tesselateSpriteSheet [
 	| heightSteps widthSteps pos |
 	heightSteps := (spriteSheet height / spriteHeight) asInteger.
 	widthSteps := (spriteSheet width / spriteWidth) asInteger.
-	Transcript
-		show:
-			'tesselateSpriteSheet.. heightSteps = ' , heightSteps asString
-				, ' widthSteps = ' , widthSteps asString;
-		cr.
 	0 to: heightSteps do: [ :y | 
 		| yline |
 		yline := self tesselationLine.

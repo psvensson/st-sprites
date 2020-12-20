@@ -38,16 +38,41 @@ SpriteProperties >> model: aModel [
 
 { #category : #accessing }
 SpriteProperties >> spriteTesselation [
-	| element aButtonElement xValueEditor yValueEditor |
-	element := BlElement new.
-	
-	xValueEditor := BrEditor new text: model spriteWidth.
-	yValueEditor := BrEditor new text: model spriteHeight.
-	
+	| element aButtonElement xValueEditor yValueEditor xLabel yLabel |
+	element := BrHorizontalPane new.
+	element
+		fitContent;
+		constraintsDo: [ :c | 
+			c horizontal matchParent.
+			c vertical matchParent ].
+	xLabel := BrLabel new
+		text: 'Sprite Width:';
+		look: BrGlamorousLabelLook new.
+	yLabel := BrLabel new
+		text: 'Sprite Height:';
+		look: BrGlamorousLabelLook new.
+	xValueEditor := BrEditor new
+		text: model spriteWidth;
+		look: BrGlamorousRegularEditorLook new.
+	yValueEditor := BrEditor new
+		text: model spriteHeight;
+		look: BrGlamorousRegularEditorLook new.
 	aButtonElement := BrButton new
 		look: BrGlamorousButtonWithLabelLook new;
-		label: 'Default';
-		action: [ :aButton | 'Clicked foo' traceCr ].
+		label: 'Save';
+		action: [ :aButton | 
+			| x y |
+			x := xValueEditor text asString asInteger.
+			y := yValueEditor text asString asInteger.
+			model
+				spriteHeight: y;
+				spriteWidth: x;
+				recreateView ].
+	element
+		addChild: xLabel;
+		addChild: xValueEditor;
+		addChild: yLabel;
+		addChild: yValueEditor.
 	element addChild: aButtonElement.
 	^ element
 ]
