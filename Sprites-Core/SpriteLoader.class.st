@@ -9,7 +9,9 @@ Class {
 		'spiteSheet',
 		'spriteSheet',
 		'spriteProperties',
-		'container'
+		'container',
+		'startFrame',
+		'endFrame'
 	],
 	#category : #'Sprites-Core-Sprites-Core'
 }
@@ -34,6 +36,45 @@ SpriteLoader >> addImage: image toContainer: container [
 			in: [ :aPannable | aPannable zoomableElement clipChildren: false ];
 		zoomToActualSize.
 	container addChild: scrollPane
+]
+
+{ #category : #accessing }
+SpriteLoader >> addImageButtonsToSpriteSheet [
+	| heightSteps widthSteps |
+	heightSteps := (spriteSheet height / spriteHeight) asInteger.
+	widthSteps := (spriteSheet width / spriteWidth) asInteger.
+	Transcript
+		show:
+			'heightStep = ' , heightSteps asString , ' widthSteps = '
+				, widthSteps asString;
+		cr.
+	0 to: heightSteps do: [ :y | 
+		0 to: widthSteps do: [ :x | 
+			imageContainer
+				addChild:
+					(self
+						spriteSelectButtonAt: (x * spriteWidth) @ (y * spriteHeight)
+						image: nil) ] ]
+]
+
+{ #category : #accessing }
+SpriteLoader >> createLineFrom: from to: to [
+	| line |
+	line := self tesselationLine.
+	line
+		fromAnchor: (BlAbsolutePositionAnchor new position: from);
+		toAnchor: (BlAbsolutePositionAnchor new position: to).
+	^ line
+]
+
+{ #category : #accessing }
+SpriteLoader >> createSprite: name startFrame: s endFrame: e [
+	
+]
+
+{ #category : #accessing }
+SpriteLoader >> endFrame: e [
+	endFrame := e
 ]
 
 { #category : #accessing }
@@ -78,6 +119,8 @@ SpriteLoader >> recreateView [
 	| browser |
 	container removeChildren.
 	browser := BrFileSelector new.
+	container addChild: browser.
+	container addChild: spriteProperties.
 	browser
 		hMatchParent;
 		vMatchParent;
@@ -88,9 +131,7 @@ SpriteLoader >> recreateView [
 			spriteSheet := image.
 			self recreateView ].
 	spriteSheet
-		ifNotNil: [ self addImage: spriteSheet toContainer: container ].
-	container addChild: browser.
-	container addChild: spriteProperties
+		ifNotNil: [ self addImage: spriteSheet toContainer: container ]
 ]
 
 { #category : #accessing }
@@ -129,6 +170,19 @@ SpriteLoader >> spriteHeight: h [
 ]
 
 { #category : #accessing }
+SpriteLoader >> spriteSelectButtonAt: pos image: image [
+	^ BlElement new
+		relocate: pos;
+		when: BlClickEvent
+			do: [ :event | 
+			Transcript
+				show: 'button ' , pos asString , ' clicked';
+				cr ];
+		size: spriteWidth @ spriteHeight;
+		background: (Color gray alpha: 0.3)
+]
+
+{ #category : #accessing }
 SpriteLoader >> spriteWidth [
 	^spriteWidth
 ]
@@ -144,23 +198,18 @@ SpriteLoader >> tesselateSpriteSheet [
 	heightSteps := (spriteSheet height / spriteHeight) asInteger.
 	widthSteps := (spriteSheet width / spriteWidth) asInteger.
 	0 to: heightSteps do: [ :y | 
-		| yline |
-		yline := self tesselationLine.
-		yline
-			fromAnchor: (BlAbsolutePositionAnchor new position: 0 @ (y * spriteHeight));
-			toAnchor:
-				(BlAbsolutePositionAnchor new
-					position: spriteSheet width @ (y * spriteHeight)).
-		imageContainer addChild: yline ].
+		imageContainer
+			addChild:
+				(self
+					createLineFrom: 0 @ (y * spriteHeight)
+					to: spriteSheet width @ (y * spriteHeight)) ].
 	0 to: widthSteps do: [ :x | 
-		| xline |
-		xline := self tesselationLine.
-		xline
-			fromAnchor: (BlAbsolutePositionAnchor new position: (x * spriteWidth) @ 0);
-			toAnchor:
-				(BlAbsolutePositionAnchor new
-					position: (x * spriteWidth) @ spriteSheet height).
-		imageContainer addChild: xline ]
+		imageContainer
+			addChild:
+				(self
+					createLineFrom: (x * spriteWidth) @ 0
+					to: (x * spriteWidth) @ spriteSheet height) ].
+	self addImageButtonsToSpriteSheet
 ]
 
 { #category : #accessing }

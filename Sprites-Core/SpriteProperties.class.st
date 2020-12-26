@@ -8,6 +8,14 @@ Class {
 }
 
 { #category : #accessing }
+SpriteProperties >> animationButtons [
+	| startLabel |
+	startLabel := BrLabel new
+		text: 'Start Frame:';
+		look: BrGlamorousLabelLook new.
+]
+
+{ #category : #accessing }
 SpriteProperties >> glamorousLabel [
 	| aLabel |
 	aLabel := BrLabel new.
