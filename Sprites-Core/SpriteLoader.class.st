@@ -17,7 +17,7 @@ Class {
 }
 
 { #category : #accessing }
-SpriteLoader >> addImage: image toContainer: container [
+SpriteLoader >> addImage: image toContainer: c [
 	| scrollPane |
 	scrollPane := BlPannableElement new.
 	self
@@ -35,26 +35,22 @@ SpriteLoader >> addImage: image toContainer: container [
 		contentElement: self imageContainer;
 			in: [ :aPannable | aPannable zoomableElement clipChildren: false ];
 		zoomToActualSize.
-	container addChild: scrollPane
+	c addChild: scrollPane
 ]
 
 { #category : #accessing }
 SpriteLoader >> addImageButtonsToSpriteSheet [
-	| heightSteps widthSteps |
-	heightSteps := (spriteSheet height / spriteHeight) asInteger.
-	widthSteps := (spriteSheet width / spriteWidth) asInteger.
-	Transcript
-		show:
-			'heightStep = ' , heightSteps asString , ' widthSteps = '
-				, widthSteps asString;
-		cr.
+	| heightSteps widthSteps sheet |
+	sheet := spriteSheet sheet.
+	heightSteps := (sheet height / spriteHeight) asInteger.
+	widthSteps := (sheet width / spriteWidth) asInteger.
 	0 to: heightSteps do: [ :y | 
 		0 to: widthSteps do: [ :x | 
 			imageContainer
 				addChild:
 					(self
 						spriteSelectButtonAt: (x * spriteWidth) @ (y * spriteHeight)
-						image: nil) ] ]
+						image: (spriteSheet getSpriteAt: x @ y)) ] ]
 ]
 
 { #category : #accessing }
@@ -128,10 +124,10 @@ SpriteLoader >> recreateView [
 		okAction: [ :filepath | 
 			| image |
 			image := PNGReadWriter formFromFileNamed: filepath.
-			spriteSheet := image.
+			spriteSheet := SpriteSheet new sheet: image.
 			self recreateView ].
 	spriteSheet
-		ifNotNil: [ self addImage: spriteSheet toContainer: container ]
+		ifNotNil: [ self addImage: spriteSheet sheet toContainer: container ]
 ]
 
 { #category : #accessing }
@@ -194,21 +190,22 @@ SpriteLoader >> spriteWidth: w [
 
 { #category : #accessing }
 SpriteLoader >> tesselateSpriteSheet [
-	| heightSteps widthSteps pos |
-	heightSteps := (spriteSheet height / spriteHeight) asInteger.
-	widthSteps := (spriteSheet width / spriteWidth) asInteger.
+	| heightSteps widthSteps pos sheet |
+	sheet := spriteSheet sheet.
+	heightSteps := (sheet height / spriteHeight) asInteger.
+	widthSteps := (sheet width / spriteWidth) asInteger.
 	0 to: heightSteps do: [ :y | 
 		imageContainer
 			addChild:
 				(self
 					createLineFrom: 0 @ (y * spriteHeight)
-					to: spriteSheet width @ (y * spriteHeight)) ].
+					to: sheet width @ (y * spriteHeight)) ].
 	0 to: widthSteps do: [ :x | 
 		imageContainer
 			addChild:
 				(self
 					createLineFrom: (x * spriteWidth) @ 0
-					to: (x * spriteWidth) @ spriteSheet height) ].
+					to: (x * spriteWidth) @ sheet height) ].
 	self addImageButtonsToSpriteSheet
 ]
 
