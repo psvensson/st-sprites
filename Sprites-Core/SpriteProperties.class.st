@@ -9,10 +9,34 @@ Class {
 
 { #category : #accessing }
 SpriteProperties >> animationButtons [
-	| startLabel |
-	startLabel := BrLabel new
-		text: 'Start Frame:';
+	| nameLabel nameEditor startButton endButton element |
+	nameLabel := BrLabel new
+		text: 'Animation name:';
 		look: BrGlamorousLabelLook new.
+	nameEditor := BrEditor new
+		size: 300@100;
+		text: '<name>';
+		look: BrGlamorousRegularEditorLook new.
+	startButton := BrButton new
+		look: BrGlamorousButtonWithLabelLook new;
+		label: 'Start frame';
+		action: [ :aButton |  ].
+	endButton := BrButton new
+		look: BrGlamorousButtonWithLabelLook new;
+		label: 'End frame';
+		action: [ :aButton |  ].
+	element := BrHorizontalPane new.
+	element
+		fitContent;
+		constraintsDo: [ :c | 
+			c horizontal matchParent.
+			c vertical matchParent ].
+	element
+		addChild: nameLabel;
+		addChild: nameEditor;
+		addChild: startButton;
+		addChild: endButton.
+	^ element
 ]
 
 { #category : #accessing }
@@ -41,7 +65,8 @@ SpriteProperties >> initialize [
 { #category : #accessing }
 SpriteProperties >> model: aModel [
 	model := aModel.
-	self addChild: self spriteTesselation
+	self addChild: self spriteTesselation.
+	self addChild: self animationButtons
 ]
 
 { #category : #accessing }
