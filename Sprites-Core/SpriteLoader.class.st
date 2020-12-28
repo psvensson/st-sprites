@@ -48,9 +48,7 @@ SpriteLoader >> addImageButtonsToSpriteSheet [
 		0 to: widthSteps do: [ :x | 
 			imageContainer
 				addChild:
-					(self
-						spriteSelectButtonAt: (x * spriteWidth) @ (y * spriteHeight)
-						image: (spriteSheet getSpriteAt: x @ y)) ] ]
+					(self spriteSelectButtonAt: (x * spriteWidth) @ (y * spriteHeight)) ] ]
 ]
 
 { #category : #accessing }
@@ -163,6 +161,19 @@ SpriteLoader >> spriteHeight [
 { #category : #accessing }
 SpriteLoader >> spriteHeight: h [
 	spriteHeight := h.
+]
+
+{ #category : #accessing }
+SpriteLoader >> spriteSelectButtonAt: pos [ 
+	^ BlElement new
+		relocate: pos;
+		when: BlClickEvent
+			do: [ :event | 
+			Transcript
+				show: 'button ' , pos asString , ' clicked';
+				cr ];
+		size: spriteWidth @ spriteHeight;
+		background: (Color gray alpha: 0.3)
 ]
 
 { #category : #accessing }
