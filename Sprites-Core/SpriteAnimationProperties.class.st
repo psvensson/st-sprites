@@ -47,7 +47,7 @@ SpriteAnimationProperties >> animationButtons [
 
 { #category : #accessing }
 SpriteAnimationProperties >> createAnimation: name startFrame: s endFrame: e [
-	^ model sheet getSpritesFrom: s to: e
+	^ (model spriteSheet) getSpritesFrom: s to: e
 ]
 
 { #category : #accessing }
