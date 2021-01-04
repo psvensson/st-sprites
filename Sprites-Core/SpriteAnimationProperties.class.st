@@ -1,30 +1,35 @@
 Class {
-	#name : #SpriteProperties,
+	#name : #SpriteAnimationProperties,
 	#superclass : #BrHorizontalPane,
 	#instVars : [
-		'model'
+		'model',
+		'startPos',
+		'endPos',
+		'animationName'
 	],
 	#category : #'Sprites-Core-Sprites-Core'
 }
 
 { #category : #accessing }
-SpriteProperties >> animationButtons [
-	| nameLabel nameEditor startButton endButton element |
+SpriteAnimationProperties >> animationButtons [
+	| nameLabel nameEditor startButton endButton element infoLabel |
 	nameLabel := BrLabel new
 		text: 'Animation name:';
 		look: BrGlamorousLabelLook new.
 	nameEditor := BrEditor new
-		size: 300@100;
-		text: '<name>';
+		size: 300 @ 100;
+		text: 'animation1';
 		look: BrGlamorousRegularEditorLook new.
-	startButton := BrButton new
-		look: BrGlamorousButtonWithLabelLook new;
-		label: 'Start frame';
-		action: [ :aButton |  ].
-	endButton := BrButton new
-		look: BrGlamorousButtonWithLabelLook new;
-		label: 'End frame';
-		action: [ :aButton |  ].
+	nameEditor editor
+		when: BrTextEditorModifiedEvent
+		do: [ :e | 
+			Transcript
+				show: 'animation name changed to ',e text;
+				cr.
+				animationName := e text ].
+	infoLabel := BrLabel new
+		text: 'Click start and end animation frames';
+		look: BrGlamorousLabelLook new.
 	element := BrHorizontalPane new.
 	element
 		fitContent;
@@ -34,13 +39,19 @@ SpriteProperties >> animationButtons [
 	element
 		addChild: nameLabel;
 		addChild: nameEditor;
-		addChild: startButton;
-		addChild: endButton.
+		"addChild: startButton;
+		addChild: endButton."
+			addChild: infoLabel.
 	^ element
 ]
 
 { #category : #accessing }
-SpriteProperties >> glamorousLabel [
+SpriteAnimationProperties >> createAnimation: name startFrame: s endFrame: e [
+	^ model sheet getSpritesFrom: s to: e
+]
+
+{ #category : #accessing }
+SpriteAnimationProperties >> glamorousLabel [
 	| aLabel |
 	aLabel := BrLabel new.
 	aLabel look: BrGlamorousLabelLook new.
@@ -49,7 +60,7 @@ SpriteProperties >> glamorousLabel [
 ]
 
 { #category : #accessing }
-SpriteProperties >> initialize [
+SpriteAnimationProperties >> initialize [
 	super initialize.
 	self
 		addLook: BrShadowLook;
@@ -63,14 +74,33 @@ SpriteProperties >> initialize [
 ]
 
 { #category : #accessing }
-SpriteProperties >> model: aModel [
+SpriteAnimationProperties >> model: aModel [
 	model := aModel.
 	self addChild: self spriteTesselation.
-	self addChild: self animationButtons
+	self addChild: self animationButtons.
+	model announcer when: SpriteSelectedAnnouncement do: [:e | self spriteSelected: e].
 ]
 
 { #category : #accessing }
-SpriteProperties >> spriteTesselation [
+SpriteAnimationProperties >> spriteSelected: e [
+	Transcript
+		show: 'sprite selected: ' , e pos asString;
+		cr.
+	startPos
+		ifNil: [ startPos := e pos ]
+		ifNotNil: [ endPos := e pos.
+			model currentSprite
+				addAnimation:
+					((self
+						createAnimation: animationName
+						startFrame: startPos
+						endFrame: endPos) named: animationName).
+			model announcer
+				announce: (AnimatedSpriteSelected new animatedSprite: model currentSprite) ]
+]
+
+{ #category : #accessing }
+SpriteAnimationProperties >> spriteTesselation [
 	| element aButtonElement xValueEditor yValueEditor xLabel yLabel |
 	element := BrHorizontalPane new.
 	element

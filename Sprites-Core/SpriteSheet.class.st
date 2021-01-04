@@ -18,7 +18,7 @@ SpriteSheet >> getSpriteAt: pos [
 SpriteSheet >> getSpritesFrom: start to: end [
 	| rv |
 	rv := OrderedCollection new.
-	start y to end y
+	start y to end y by: spriteWidth
 		do: [ :y | start x to: end x do: [ :x | rv add: (self getSpriteAt: x @ y) ] ].
 	^ rv
 ]

@@ -11,7 +11,13 @@ Class {
 		'spriteProperties',
 		'container',
 		'startFrame',
-		'endFrame'
+		'endFrame',
+		'announcer',
+		'startPos',
+		'endPos',
+		'selectedSprite',
+		'currentSprite',
+		'sprites'
 	],
 	#category : #'Sprites-Core-Sprites-Core'
 }
@@ -52,6 +58,23 @@ SpriteLoader >> addImageButtonsToSpriteSheet [
 ]
 
 { #category : #accessing }
+SpriteLoader >> announcer [
+  ^ announcer ifNil: [ announcer := Announcer new ]
+]
+
+{ #category : #accessing }
+SpriteLoader >> createContainer [
+	^ BlElement new
+				layout: BlLinearLayout vertical;
+				background: Color white;
+				addLook: BrShadowLook;
+				margin: (BlInsets all: 20);
+				constraintsDo: [ :c | 
+					c horizontal matchParent.
+					c vertical matchParent ]
+]
+
+{ #category : #accessing }
 SpriteLoader >> createLineFrom: from to: to [
 	| line |
 	line := self tesselationLine.
@@ -62,8 +85,26 @@ SpriteLoader >> createLineFrom: from to: to [
 ]
 
 { #category : #accessing }
-SpriteLoader >> createSprite: name startFrame: s endFrame: e [
-	
+SpriteLoader >> createSpriteList [
+	^ BrSimpleList new
+		itemStencil: [
+			BrLabel new
+				"hMatchParent;"
+				look: BrGlamorousLabelLook new + (BrStyleCommonLook new
+					selected: [ :aStyle | aStyle background: Color veryVeryLightGray ]);
+				padding: (BlInsets all: 5) ];
+		itemDataBinder: [ :eachElement :eachClass :eachIndex | eachElement text: eachClass name ];
+		items: self sprites 
+]
+
+{ #category : #accessing }
+SpriteLoader >> currentSprite [
+	^currentSprite
+]
+
+{ #category : #accessing }
+SpriteLoader >> currentSprite: aSprite [
+	currentSprite := aSprite
 ]
 
 { #category : #accessing }
@@ -86,7 +127,11 @@ SpriteLoader >> imageContainer: anObject [
 SpriteLoader >> initialize [
 	spriteHeight := 128.
 	spriteWidth := 128.
-	spriteProperties := SpriteProperties new model: self
+	spriteProperties := SpriteAnimationProperties new model: self.
+	currentSprite := AnimatedSprite new.
+	sprites := OrderedCollection new.
+	sprites add currentSprite
+	
 ]
 
 { #category : #accessing }
@@ -96,16 +141,13 @@ SpriteLoader >> loadPNG: aView [
 	^ aView explicit
 		title: 'Details' translated;
 		priority: 5;
-		stencil: [ container := BlElement new
-				layout: BlLinearLayout vertical;
-				background: Color white;
-				addLook: BrShadowLook;
-				margin: (BlInsets all: 20);
-				constraintsDo: [ :c | 
-					c horizontal matchParent.
-					c vertical matchParent ].
+		stencil: [ container := self createContainer .
 			self recreateView.
 			container ]
+]
+
+{ #category : #accessing }
+SpriteLoader >> newAnimation [
 ]
 
 { #category : #accessing }
@@ -164,29 +206,28 @@ SpriteLoader >> spriteHeight: h [
 ]
 
 { #category : #accessing }
-SpriteLoader >> spriteSelectButtonAt: pos [ 
+SpriteLoader >> spriteSelectButtonAt: pos [
 	^ BlElement new
 		relocate: pos;
 		when: BlClickEvent
-			do: [ :event | 
-			Transcript
-				show: 'button ' , pos asString , ' clicked';
-				cr ];
+			do: [ :event | self spriteSelectButtonClicked: pos ];
 		size: spriteWidth @ spriteHeight;
 		background: (Color gray alpha: 0.3)
 ]
 
 { #category : #accessing }
-SpriteLoader >> spriteSelectButtonAt: pos image: image [
-	^ BlElement new
-		relocate: pos;
-		when: BlClickEvent
-			do: [ :event | 
-			Transcript
-				show: 'button ' , pos asString , ' clicked';
-				cr ];
-		size: spriteWidth @ spriteHeight;
-		background: (Color gray alpha: 0.3)
+SpriteLoader >> spriteSelectButtonClicked: pos [
+	| form |
+	Transcript
+		show: 'button ' , pos asString , ' clicked';
+		cr.
+	form := spriteSheet sheet
+		copy: (pos corner:  (spriteWidth @ spriteHeight)).
+	self announcer
+		announce:
+			(SpriteSelectedAnnouncement new
+				form: form;
+				pos: pos)
 ]
 
 { #category : #accessing }
@@ -197,6 +238,11 @@ SpriteLoader >> spriteWidth [
 { #category : #accessing }
 SpriteLoader >> spriteWidth: w [
 	spriteWidth := w.
+]
+
+{ #category : #accessing }
+SpriteLoader >> sprites [
+	^ sprites
 ]
 
 { #category : #accessing }

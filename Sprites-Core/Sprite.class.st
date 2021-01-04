@@ -11,7 +11,13 @@ Class {
 { #category : #accessing }
 Sprite >> initialize [
 	super initialize.
+	name := 'Unnamed Sprite'.
 	frames := OrderedCollection new.
+]
+
+{ #category : #accessing }
+Sprite >> name [
+	^name
 ]
 
 { #category : #accessing }
