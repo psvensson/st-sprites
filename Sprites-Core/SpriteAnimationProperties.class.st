@@ -47,7 +47,7 @@ SpriteAnimationProperties >> animationButtons [
 
 { #category : #accessing }
 SpriteAnimationProperties >> createAnimation: name startFrame: s endFrame: e [
-	^ model sheet getSpritesFrom: s to: e
+	^ (model spriteSheet) getSpritesFrom: s to: e
 ]
 
 { #category : #accessing }
@@ -91,10 +91,10 @@ SpriteAnimationProperties >> spriteSelected: e [
 		ifNotNil: [ endPos := e pos.
 			model currentSprite
 				addAnimation:
-					((self
+					(self
 						createAnimation: animationName
 						startFrame: startPos
-						endFrame: endPos) named: animationName).
+						endFrame: endPos) named: animationName.
 			model announcer
 				announce: (AnimatedSpriteSelected new animatedSprite: model currentSprite) ]
 ]

@@ -75,6 +75,40 @@ SpriteLoader >> createContainer [
 ]
 
 { #category : #accessing }
+SpriteLoader >> createImportDropDown [
+	| button dropdown |
+	dropdown := BrGlamorousWithDropdownLook
+		handle: [ BrButton new
+				look: BrGlamorousButtonRectangularLook + BrGlamorousButtonLabelLook;
+				label: 'Import PNG';
+				yourself ]
+		content: [ self createImportFileBrowser ].
+	button := BrButton new
+		look: BrGlamorousButtonWithLabelLook + dropdown;
+		label: 'Import';
+		yourself.
+	self announcer
+		when: SpritesheetLoadedAnnouncement
+		do: [ :e | dropdown hide ].
+	^ button
+]
+
+{ #category : #accessing }
+SpriteLoader >> createImportFileBrowser [
+	^ BrFileSelector new
+		hMatchParent;
+		vMatchParent;
+		buttonLabel: 'Import';
+		okAction: [ :filepath | 
+			| image |
+			image := PNGReadWriter formFromFileNamed: filepath.
+			spriteSheet := SpriteSheet new sheet: image.
+			self recreateView.
+			self announcer
+				announce: (SpritesheetLoadedAnnouncement new sheet: spriteSheet; yourself) ]
+]
+
+{ #category : #accessing }
 SpriteLoader >> createLineFrom: from to: to [
 	| line |
 	line := self tesselationLine.
@@ -130,7 +164,7 @@ SpriteLoader >> initialize [
 	spriteProperties := SpriteAnimationProperties new model: self.
 	currentSprite := AnimatedSprite new.
 	sprites := OrderedCollection new.
-	sprites add currentSprite
+	sprites add: currentSprite
 	
 ]
 
@@ -152,20 +186,9 @@ SpriteLoader >> newAnimation [
 
 { #category : #accessing }
 SpriteLoader >> recreateView [
-	| browser |
 	container removeChildren.
-	browser := BrFileSelector new.
-	container addChild: browser.
+	container addChild: self createImportDropDown.
 	container addChild: spriteProperties.
-	browser
-		hMatchParent;
-		vMatchParent;
-		buttonLabel: 'Import';
-		okAction: [ :filepath | 
-			| image |
-			image := PNGReadWriter formFromFileNamed: filepath.
-			spriteSheet := SpriteSheet new sheet: image.
-			self recreateView ].
 	spriteSheet
 		ifNotNil: [ self addImage: spriteSheet sheet toContainer: container ]
 ]
@@ -228,6 +251,11 @@ SpriteLoader >> spriteSelectButtonClicked: pos [
 			(SpriteSelectedAnnouncement new
 				form: form;
 				pos: pos)
+]
+
+{ #category : #accessing }
+SpriteLoader >> spriteSheet [
+	^spriteSheet
 ]
 
 { #category : #accessing }
